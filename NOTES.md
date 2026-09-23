@@ -152,6 +152,11 @@ Restore the original at any time the same way with `firmware/stm32_flash.bin`.
 Note the radio itself still powers up and advertises; only the MCU-side input
 channel is severed. For a fully silent device, remove the FSC-BT836 module.
 
+**Live test (verified)**: after flashing, `$I` returns `[BT_VER:]` (empty —
+the module response no longer reaches the dispatcher, vs.
+`[BT_VER:8.1.2,FSC-BT836B]` before the patch), grbl responds normally over
+USB, and the machine operates as usual.
+
 ## Legal
 
 `firmware/stm32_flash.bin` contains SculpFun's copyrighted firmware, dumped
