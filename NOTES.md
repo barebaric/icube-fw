@@ -124,6 +124,34 @@ and [diode-laser-wiki firmware page](https://diode-laser-wiki.com/documentation/
 The v1.0.15 (2024-09-23) firmware on QV3 hardware has never been published by
 the vendor; this dump is currently the only public copy.
 
+## Disabling the Bluetooth channel (software patch)
+
+The BT module hangs off UART6/stream "channel 2" (`AT+VER`/`AT+BAUD=%d` are
+written to stream 2; ESP503/ESP504). The main-loop serial poller
+(`FUN_0800b538`) round-robins channels 0..3 via `getc`/dispatch. The vector
+table shows only three real UART ISRs (USART1 = USB/CH340, USART2, USART6) —
+channel 3 never receives data.
+
+Patch (`scripts/patch_disable_bt.py`): one byte at `0x0800b668`,
+`cmp r0, #4` → `cmp r0, #2`, so the dispatcher only polls channels 0 (USB)
+and 1 — the BT channel (2) and the phantom channel (3) are never read.
+Everything else, including USB grbl, is untouched.
+
+```
+original: 50fa80787b7a0a1205015f94a06bb4ca  firmware/stm32_flash.bin
+patched : 81178c7620bffb14208e015f26cc0ee4  firmware/stm32_flash_bt_disabled.bin
+```
+
+Flash the patched image (BOOT+RESET dance first):
+
+```bash
+stm32loader -p /dev/ttyUSB0 -b 115200 -e -w -v firmware/stm32_flash_bt_disabled.bin
+```
+
+Restore the original at any time the same way with `firmware/stm32_flash.bin`.
+Note the radio itself still powers up and advertises; only the MCU-side input
+channel is severed. For a fully silent device, remove the FSC-BT836 module.
+
 ## Legal
 
 `firmware/stm32_flash.bin` contains SculpFun's copyrighted firmware, dumped
