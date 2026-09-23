@@ -1,0 +1,8 @@
+# Ghidra project files (kept outside the repo in /tmp during analysis)
+*.rep/
+*.gpr
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+*.swp
