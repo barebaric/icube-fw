@@ -6,3 +6,6 @@
 .DS_Store
 Thumbs.db
 *.swp
+
+# run artifacts (flash/session logs stay local, not committed)
+logs/

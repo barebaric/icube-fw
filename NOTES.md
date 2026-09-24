@@ -157,6 +157,79 @@ the module response no longer reaches the dispatcher, vs.
 `[BT_VER:8.1.2,FSC-BT836B]` before the patch), grbl responds normally over
 USB, and the machine operates as usual.
 
+## The job-wedge bug (root cause: flame-check auto-shutdown)
+
+Long G-code jobs died at seemingly random times (40 s to 3 h into a run): the
+machine stopped acknowledging lines, soft resets sometimes helped, sometimes
+only a power cycle brought it back. Systematic elimination ruled out the host,
+the driver, the G-code content, and the Bluetooth module (crashes continued
+with the BT input channel patched out).
+
+The actual cause is a vendor safety feature: a **flame-detection monitor task**
+(the `FlCk` seen in status reports). Its logic, fully reverse engineered:
+
+- `FUN_08016a0c` calls `xTaskCreate` for the monitor at `FUN_0801696c` —
+  **unconditionally, on every boot**. No `$` setting gates it.
+- The monitor reads a sensor every 10 ms (`FUN_08015bee`); after **10
+  consecutive "hot" readings** it broadcasts
+  `Flame sensor triggered, please check!The machine has stopped working, it
+  can only resume normal operation afterbeing powered up again.`
+  (string at `0x0801996c`), stops motion, and sets a global shutdown flag at
+  `0x2000c1e8`.
+- That flag is checked in **28 places** (protocol loop, `$` handler, report
+  builder, …) — the machine refuses all work until power-cycled, exactly as
+  the message says.
+
+With the optional flame-sensor module not installed, the sensor input floats
+and false-triggers — explaining the random timing. Run 7's host log caught the
+trigger in the act: a fragmented `[MSG:` (start of the flame message) escaped
+onto the wire right at the wedge moment.
+
+**Fix**: NOP the 4-byte `bl 0x8016a0c` task-creation call at `0x08012d12`.
+
+## The patched image (`stm32_flash_noflame_watchdog.bin`)
+
+Built on top of `stm32_flash_bt_disabled.bin` (BT channel already severed,
+see above). Contains, in addition to the BT patch:
+
+| Change | Location | Purpose |
+|---|---|---|
+| flame task creation NOPed | `0x08012d12` | root-cause fix: no monitor, no false shutdown |
+| ROLLER/FlCk status fields removed | branch retarget `0x0800d055` | dead feature, shrinks reports |
+| TXE busy-wait spins NOPed | `0x0800dfda`, `0x0800dff2`, `0x0800e00a` | no infinite spin if a channel's TX FIFO stalls |
+| HardFault-class vectors → recorder stub | vector table → `0x0801A000` | prints `HF:<PC> <LR>` then self-resets |
+| SysTick stall watchdog | vector[15] → `0x0801AC00` | if the RX ring holds unacked bytes for 30 000 consecutive ticks: emits `WD:<pending bytes>` (the lines the machine choked on) then self-resets |
+| IWDG (independent watchdog) | boot stub at vector[1] → `0x0801AE00` | started before anything else (PR=6, RLR=0xFFF ≈ 33 s); fed only from the serial poller's `getc` call site (patched `bl` at `0x0800b6ac` → feed stub `0x0801AE80`) — any main-loop wedge, even one that masks interrupts, causes a hardware reset |
+
+All stubs live in previously-erased flash (`0x0801A000`–`0x0801AE98`) and were
+validated in Unicorn emulation before flashing; the IWDG was additionally
+verified live (a feed-less canary build produced a boot banner every ~33 s).
+
+The watchdogs are *defense in depth*: with the flame monitor gone they should
+never fire, but if anything else ever wedges the machine it now self-recovers
+in ≈33 s instead of bricking until a power cycle.
+
+```
+original : (firmware/stm32_flash.bin)
+bt-disab.: 81178c7620bffb14208e015f26cc0ee4  firmware/stm32_flash_bt_disabled.bin
+final    : d1fa73db5edc6f6c8d3aab8be8e6d1461e0761fac99557226c7ffd596c5f3286  firmware/stm32_flash_noflame_watchdog.bin
+```
+
+Flash it (BOOT+RESET dance first — `scripts/flash_wait.py` watches for the
+bootloader and flashes as soon as the chip ACKs, then power-cycle normally):
+
+```bash
+python3 scripts/flash_wait.py
+# or explicitly:
+stm32loader -p /dev/ttyUSB0 -b 115200 -P even -e -w -v \
+  firmware/stm32_flash_noflame_watchdog.bin
+```
+
+**Live verification**: with this image the machine ran a 28 290-line,
+~3.5-hour G-code job (`long.gcode`, F960) well past every point where the
+stock/BT-patched firmware had previously died (40 s, 2:42, 16:19, 20:48,
+58:43, 103:31) with zero stalls and zero warnings.
+
 ## Legal
 
 `firmware/stm32_flash.bin` contains SculpFun's copyrighted firmware, dumped

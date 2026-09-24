@@ -15,8 +15,13 @@ USB-serial bridge wired to the MCU's USART1.
 | Path | Contents |
 |---|---|
 | `firmware/stm32_flash.bin` | full 256 KB flash dump read from the device |
+| `firmware/stm32_flash_bt_disabled.bin` | dump + BT input channel disabled (1-byte poller patch) |
+| `firmware/stm32_flash_noflame_watchdog.bin` | recommended image: BT disabled, flame auto-shutdown removed, IWDG + stall watchdogs added (see `NOTES.md`) |
 | `decomp/all_stm32_qv3.c` | Ghidra decompilation (711 functions) |
 | `scripts/raw_dump.py` | STM32 UART-bootloader flash dumper (worked on this device) |
+| `scripts/flash_wait.py` | waits for the bootloader, then flashes + verifies an image |
+| `scripts/flash_writer.py` | selective-sector writer (erase command NACKs on this board; kept for record) |
+| `scripts/usbmon_sniff.py` | Linux usbmon packet sniffer for the CH340 link |
 | `scripts/ghidra/DecompileAll.java` | Ghidra headless script used for the decompile |
 | `docs/photos/` | mainboard photos taken during the process |
 | `NOTES.md` | full reverse-engineering write-up |
@@ -31,4 +36,5 @@ on the same CH340 port (`/dev/ttyUSB0`, 115200 8E1):
 python3 scripts/raw_dump.py        # 0x7F handshake → 256 KB read from 0x08000000
 ```
 
-See `NOTES.md` for the full story, firmware contents, and reproduction steps.
+See `NOTES.md` for the full story, firmware contents, the job-wedge root
+cause (vendor flame auto-shutdown false-triggering), and reproduction steps.
