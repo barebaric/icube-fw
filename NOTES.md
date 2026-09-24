@@ -187,10 +187,28 @@ onto the wire right at the wedge moment.
 
 **Fix**: NOP the 4-byte `bl 0x8016a0c` task-creation call at `0x08012d12`.
 
-## The patched image (`stm32_flash_noflame_watchdog.bin`)
+## The minimal image (`stm32_flash_noflame.bin`)
+
+Stock firmware + exactly one change: the 4-byte NOP over the flame-task
+creation call (root-cause fix above). Bluetooth enabled, ROLLER/FlCk status
+fields intact, stock UART timing, no watchdogs. Built directly from
+`firmware/stm32_flash.bin`; verified to differ from it in exactly 4 bytes.
+
+```
+original : (firmware/stm32_flash.bin)
+minimal  : 1257742c0f9cc102f5315d0ea6ff82cdd63db8c94ddb8fe16d56cf71d2ab28a9  firmware/stm32_flash_noflame.bin
+hardened : d1fa73db5edc6f6c8d3aab8be8e6d1461e0761fac99557226c7ffd596c5f3286  firmware/stm32_flash_noflame_watchdog.bin
+```
+
+Flash either with `python3 scripts/flash_wait.py <image>` (BOOT+RESET dance,
+then power-cycle normally).
+
+## The hardened image (`stm32_flash_noflame_watchdog.bin`)
 
 Built on top of `stm32_flash_bt_disabled.bin` (BT channel already severed,
-see above). Contains, in addition to the BT patch:
+see above). This variant additionally removes the BT channel, adds the
+watchdog hardening described below, and strips the ROLLER/FlCk report
+fields. Contains:
 
 | Change | Location | Purpose |
 |---|---|---|

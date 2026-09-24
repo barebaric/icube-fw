@@ -15,8 +15,9 @@ USB-serial bridge wired to the MCU's USART1.
 | Path | Contents |
 |---|---|
 | `firmware/stm32_flash.bin` | full 256 KB flash dump read from the device |
+| `firmware/stm32_flash_noflame.bin` | recommended image: stock firmware + **only** the flame auto-shutdown fix (4-byte NOP); Bluetooth and everything else untouched |
 | `firmware/stm32_flash_bt_disabled.bin` | dump + BT input channel disabled (1-byte poller patch) |
-| `firmware/stm32_flash_noflame_watchdog.bin` | recommended image: BT disabled, flame auto-shutdown removed, IWDG + stall watchdogs added (see `NOTES.md`) |
+| `firmware/stm32_flash_noflame_watchdog.bin` | hardened variant: BT disabled, flame fix, IWDG + stall watchdogs added (see `NOTES.md`) |
 | `decomp/all_stm32_qv3.c` | Ghidra decompilation (711 functions) |
 | `scripts/raw_dump.py` | STM32 UART-bootloader flash dumper (worked on this device) |
 | `scripts/flash_wait.py` | waits for the bootloader, then flashes + verifies an image |
