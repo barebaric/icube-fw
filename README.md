@@ -10,14 +10,25 @@ It uses an **STM32F4-class Cortex-M4** MCU (marked `STM32F402RG T6`, bootloader
 PID `0x423`), an external **Feasycom FSC-BT836** Bluetooth module, and a CH340
 USB-serial bridge wired to the MCU's USART1.
 
+## Firmware images
+
+| Image | Bluetooth | Flame auto-off | ROLLER/FlCk fields | Watchdogs | Use when |
+|---|---|---|---|---|---|
+| `stm32_flash.bin` | ✔ | ✔ | ✔ | — | you want the device exactly as shipped (recovery baseline) |
+| `stm32_flash_noflame.bin` | ✔ | ✘ fixed | ✔ | — | **recommended** — only the root-cause fix (4-byte NOP); maximum stock fidelity |
+| `stm32_flash_bt_disabled.bin` | ✘ severed | ✔ | ✔ | — | you want the radio's serial input muted but no other changes |
+| `stm32_flash_noflame_watchdog.bin` | ✘ severed | ✘ fixed | ✘ removed | IWDG + stall + HardFault | you want self-recovery from any future hang; radios off, minimal reports |
+
+"Flame auto-off" is the vendor safety task that false-triggers on machines
+without the optional flame sensor and bricks the board until a power cycle —
+see `NOTES.md` for the full analysis. All images flash the same way:
+`python3 scripts/flash_wait.py <image>` (BOOT+RESET dance, then power-cycle).
+
 ## Repo layout
 
 | Path | Contents |
 |---|---|
-| `firmware/stm32_flash.bin` | full 256 KB flash dump read from the device |
-| `firmware/stm32_flash_noflame.bin` | recommended image: stock firmware + **only** the flame auto-shutdown fix (4-byte NOP); Bluetooth and everything else untouched |
-| `firmware/stm32_flash_bt_disabled.bin` | dump + BT input channel disabled (1-byte poller patch) |
-| `firmware/stm32_flash_noflame_watchdog.bin` | hardened variant: BT disabled, flame fix, IWDG + stall watchdogs added (see `NOTES.md`) |
+| `firmware/` | the four flash images compared in the table above |
 | `decomp/all_stm32_qv3.c` | Ghidra decompilation (711 functions) |
 | `scripts/raw_dump.py` | STM32 UART-bootloader flash dumper (worked on this device) |
 | `scripts/flash_wait.py` | waits for the bootloader, then flashes + verifies an image |
