@@ -11,7 +11,7 @@ import subprocess, sys, time
 import serial
 
 IMAGE = sys.argv[1] if len(sys.argv) > 1 else \
-    "firmware/stm32_flash_noflame.bin"
+    "firmware/stm32_flash_noflame_watchdog_bt.bin"
 
 s = serial.Serial("/dev/ttyUSB0", 115200, parity=serial.PARITY_EVEN,
                   bytesize=8, stopbits=1, timeout=1.0)

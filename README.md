@@ -35,6 +35,8 @@ see `NOTES.md` for the full analysis. All images flash the same way:
 | `scripts/flash_wait.py` | waits for the bootloader, then flashes + verifies an image |
 | `scripts/flash_writer.py` | selective-sector writer (erase command NACKs on this board; kept for record) |
 | `scripts/usbmon_sniff.py` | Linux usbmon packet sniffer for the CH340 link |
+| `scripts/launch_run.sh.py` | launches an instrumented job (usbmon sniffer + strace + `raydriver run`) |
+| `scripts/wait_machine_back.sh` | polls until the machine answers IDLE again (post-wedge recovery watcher) |
 | `scripts/ghidra/DecompileAll.java` | Ghidra headless script used for the decompile |
 | `docs/photos/` | mainboard photos taken during the process |
 | `NOTES.md` | full reverse-engineering write-up |
