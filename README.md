@@ -18,6 +18,7 @@ USB-serial bridge wired to the MCU's USART1.
 | `stm32_flash_noflame.bin` | ✔ | ✘ fixed | ✔ | — | **recommended** — only the root-cause fix (4-byte NOP); maximum stock fidelity |
 | `stm32_flash_bt_disabled.bin` | ✘ severed | ✔ | ✔ | — | you want the radio's serial input muted but no other changes |
 | `stm32_flash_noflame_watchdog.bin` | ✘ severed | ✘ fixed | ✘ removed | IWDG + stall + HardFault | you want self-recovery from any future hang; radios off, minimal reports |
+| `stm32_flash_noflame_watchdog_bt.bin` | ✔ | ✘ fixed | ✘ removed | IWDG + stall + HardFault | the hardened variant with Bluetooth re-enabled |
 
 "Flame auto-off" is the vendor safety task that false-triggers on machines
 without the optional flame sensor and bricks the board until a power cycle —

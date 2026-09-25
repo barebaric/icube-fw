@@ -198,7 +198,13 @@ fields intact, stock UART timing, no watchdogs. Built directly from
 original : (firmware/stm32_flash.bin)
 minimal  : 1257742c0f9cc102f5315d0ea6ff82cdd63db8c94ddb8fe16d56cf71d2ab28a9  firmware/stm32_flash_noflame.bin
 hardened : d1fa73db5edc6f6c8d3aab8be8e6d1461e0761fac99557226c7ffd596c5f3286  firmware/stm32_flash_noflame_watchdog.bin
+hardened+BT: 828a288fd5293933f3bca460f2870af5bb7815dc90c3e99ef435bdd6d869ac45  firmware/stm32_flash_noflame_watchdog_bt.bin
 ```
+
+`stm32_flash_noflame_watchdog_bt.bin` is the hardened build with only the
+1-byte BT-channel patch reverted (`cmp r0,#2` → `cmp r0,#4` at
+`0x0800b668`): Bluetooth fully enabled, everything else identical to the
+hardened image.
 
 Flash either with `python3 scripts/flash_wait.py <image>` (BOOT+RESET dance,
 then power-cycle normally).
