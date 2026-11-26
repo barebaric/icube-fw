@@ -41,6 +41,30 @@ the firmware image itself.
 
 All five images and their differences: [comparison table below](#firmware-images).
 
+### First: back up your current firmware
+
+The same bootloader can **read** the whole flash, so before changing anything,
+keep a fallback copy of whatever is on your machine right now:
+
+1. Machine ON, then hold **BOOT**, tap **RESET**, release **BOOT**.
+2. Dump the flash to a file of your choice:
+
+   ```bash
+   python3 scripts/raw_dump.py my_backup.bin
+   ```
+
+   (Reads 256 KB from `0x08000000`; takes a few minutes.)
+3. Restore it any time by flashing that file exactly like any other image
+   (next section):
+
+   ```bash
+   python3 scripts/flash_wait.py my_backup.bin
+   ```
+
+Note that `firmware/stm32_flash.bin` in this repo is already a complete factory
+dump (v1.0.15, 2024-09-23) from a QV3 board — if your machine runs that
+version, you can restore factory state with it directly, no dumping needed.
+
 ### Flashing, step by step
 
 1. Connect USB and switch the machine **ON**.
@@ -69,29 +93,6 @@ stm32loader -p /dev/ttyUSB0 -b 115200 -P even -e -w -v firmware/stm32_flash_nofl
 
 Replace `/dev/ttyUSB0` with your port (e.g. `COM3` on Windows). `-e -w -v`
 means erase, write, verify.
-
-### Back up your current firmware / restore factory state
-
-Yes — the same bootloader can **read** the whole flash, so you can keep a
-fallback copy of whatever is on your machine right now:
-
-1. Machine ON, then hold **BOOT**, tap **RESET**, release **BOOT**.
-2. Dump the flash to a file of your choice:
-
-   ```bash
-   python3 scripts/raw_dump.py my_backup.bin
-   ```
-
-   (Reads 256 KB from `0x08000000`; takes a few minutes.)
-3. Restore it any time by flashing that file exactly like any other image:
-
-   ```bash
-   python3 scripts/flash_wait.py my_backup.bin
-   ```
-
-Note that `firmware/stm32_flash.bin` in this repo is already a complete factory
-dump (v1.0.15, 2024-09-23) from a QV3 board — if your machine runs that
-version, you can restore factory state with it directly, no dumping needed.
 
 > **Safety note:** the flame monitor is a fire-safety feature. These patches
 > are intended for machines where the optional sensor is *not* installed and
