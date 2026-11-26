@@ -52,11 +52,10 @@ All five images and their differences: [comparison table below](#firmware-images
 
    It prints `waiting for bootloader...` and keeps probing the port — you can
    take your time with the next step.
-3. On the mainboard, **hold BOOT**, tap **RESET**, then release BOOT. Both are
-   small silkscreened buttons next to the MCU (the reset button is labelled
-   `TDE` on the board photos). The chip now runs its ROM bootloader on the
-   same USB-serial port; the script detects it and flashes + verifies
-   automatically (about a minute).
+3. On the mainboard, **hold BOOT**, tap **RESET**, then release BOOT (the
+   buttons sit next to the MCU; see photo above). The chip now runs its ROM
+   bootloader on the same USB-serial port; the script detects it and flashes +
+   verifies automatically (about a minute).
 4. When it prints `FLASH_OK`, power-cycle the machine normally (switch off/on,
    no buttons held). It now boots the new firmware.
 5. Sanity check: send `$I` from your G-code sender (115200 baud) — you should
