@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Raw STM32 UART-bootloader flash dumper - one session, incremental save."""
+"""Raw STM32 UART-bootloader flash dumper - one session, incremental save.
+
+Usage: python3 scripts/raw_dump.py [output.bin]   (default: firmware/stm32_flash.bin)
+"""
 import serial, sys, time
 
 PORT = '/dev/ttyUSB0'
-OUT = 'firmware/stm32_flash.bin'
+OUT = sys.argv[1] if len(sys.argv) > 1 else 'firmware/stm32_flash.bin'
 MAX_SIZE = 1024 * 1024          # try up to 1 MB, stop earlier on NACK
 BLOCK = 256
 

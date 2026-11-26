@@ -7,7 +7,7 @@ bootloader handshake (0x7F -> 0x79) so the operator can do the BOOT+RESET
 dance whenever ready; flashes as soon as the chip ACKs.
 """
 
-import subprocess, sys, time
+import shutil, subprocess, sys, time
 import serial
 
 IMAGE = sys.argv[1] if len(sys.argv) > 1 else \
@@ -30,7 +30,8 @@ s.close()
 if not ok:
     print("TIMEOUT waiting for bootloader"); sys.exit(1)
 time.sleep(0.5)
-r = subprocess.run(["/home/sam/Documents/projects/code/raydriver/.venv/bin/stm32loader",
-                    "-p", "/dev/ttyUSB0", "-b", "115200", "-P", "even",
-                    "-e", "-w", "-v", IMAGE])
+loader = shutil.which("stm32loader")
+cmd = [loader] if loader else [sys.executable, "-m", "stm32loader"]
+r = subprocess.run(cmd + ["-p", "/dev/ttyUSB0", "-b", "115200", "-P", "even",
+                          "-e", "-w", "-v", IMAGE])
 print("FLASH_OK" if r.returncode == 0 else "FLASH_FAILED", flush=True)
